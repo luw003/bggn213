@@ -2,7 +2,7 @@
 title: "Class 6 Writing Functions in R"
 author: "Luke Wang"
 date: "1/25/2019"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -110,7 +110,7 @@ rescale (c(1,2,NA,3,10))
 Diagnosing Unexpected Result
 ```{r}
 z <- c(1,2,NA,3,10)
-range(x)
+# range(x)
 ```
 
 Dealing with NA
