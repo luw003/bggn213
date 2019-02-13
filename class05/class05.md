@@ -1,14 +1,11 @@
-#' ---
-#' title: "CLass 5 Graphing and Plotting in R"
-#' author: "Luke Wang"
-#' date: "Fri Jan 25 13:32:34 2019"
-#' output: github_document
-#' ---
+CLass 5 Graphing and Plotting in R
+================
+Luke Wang
+Fri Jan 25 13:32:34 2019
 
+Class 05 Graphics and plots with R
 
-#' Class 05 Graphics and plots with R
-
-
+``` r
 # Section 2A Line Plot
 
 # Read table with header
@@ -24,7 +21,11 @@ weight <- read.table("lecture-5-bggn213-rstats/weight_chart.txt", header = TRUE)
 # xlab/ylab = name of x/y lable, in ""
 
 plot( weight,pch=15,type ="o", cex= 1.5, lwd=2, ylim=c(2,10), xlab="Age (months) ", ylab="Weight (kg)", main = "Baby Weight for First 9 Months")
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-1.png)
+
+``` r
 ## Barplot of genomic features
 
 # Read features data
@@ -41,7 +42,11 @@ features <- read.table("lecture-5-bggn213-rstats/feature_counts.txt", header= TR
 # par()$mar will display the default margin
 par(mar=c(5.1, 7, 4.1, 2.1))
 barplot(features$Count, horiz = TRUE, xlab = "Counts", names.arg = features$Feature, las = 1, main ="Number of Features in the Mouse GRCm38 Genome", xlim = c(0,80000))
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-2.png)
+
+``` r
 ## Using colors in plots
 # rainbow()
 # heat.colors()
@@ -52,10 +57,18 @@ sex_counts <- read.table("lecture-5-bggn213-rstats/male_female_counts.txt", head
 
 # color with rainbow()
 barplot(sex_counts$Count, col = rainbow(nrow(sex_counts)))
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-3.png)
+
+``` r
 # color with alternating color
 barplot(sex_counts$Count, col = c("yellow","blue"))
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-4.png)
+
+``` r
 ## Coloring by value
 genes <- read.table("lecture-5-bggn213-rstats/up_down_expression.txt", header = TRUE)
 
@@ -66,7 +79,11 @@ state <- genes$State
 
 palette(c("blue","grey", "red"))
 plot(genes$Condition1,genes$Condition2, col= state, ylab = "Expression Condition 2", xlab="Expression Condition 1")
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-5.png)
+
+``` r
 ## Dynamic use of color, coloring by Point Density
 
 meth <- read.delim("lecture-5-bggn213-rstats/expression_methylation.txt")
@@ -74,8 +91,11 @@ meth <- read.delim("lecture-5-bggn213-rstats/expression_methylation.txt")
 # densCols creates a vector of color values assigned to each point
 densColors <- densCols(meth$gene.meth, meth$expression)
 plot(meth$gene.meth,meth$expression, col= densColors, pch=20)
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-6.png)
 
+``` r
 # Plot genes with greater than zero expression
 # Using colorspaces to assign diverging HCL palette with n=3 to the plot
 # Load library(colorspace)
@@ -83,4 +103,6 @@ library(colorspace)
 expressionind <- meth$expression > 0
 densColors <- densCols(meth$gene.meth[expressionind], meth$expression[expressionind], colramp = colorRampPalette(diverge_hcl(3)))
 plot(meth$gene.meth[expressionind],meth$expression[expressionind], col= densColors, pch=20)
+```
 
+![](class05_files/figure-markdown_github/unnamed-chunk-1-7.png)
