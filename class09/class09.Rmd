@@ -2,7 +2,7 @@
 title: "Class 09 Unsupervised Learning Analysis of Human Breast Cancer Cells"
 author: "Luke Wang"
 date: "2/8/2019"
-output: html_document
+output: github_document
 ---
 
 ```{r setup, include=FALSE}
