@@ -1,0 +1,12 @@
+name: Sandbox
+title: Sandbox
+username:
+account: lukew
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 677852
+bundleId: 1847026
+url: https://lukew.shinyapps.io/Sandbox/
+when: 1548890320.46328
+asMultiple: FALSE
+asStatic: FALSE

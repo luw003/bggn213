@@ -1,0 +1,245 @@
+---
+title: "Class 09 Unsupervised Learning Analysis of Human Breast Cancer Cells"
+author: "Luke Wang"
+date: "2/8/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Analyzing Human Breast Cancer Cells!
+
+## Reading and Examining the Data
+
+Importing the csv file
+```{r}
+wisc.df <- read.csv("~/Desktop/BGGN 213/class09/WisconsinCancer.csv")
+
+# Examing the Data
+
+head(wisc.df)
+```
+
+Converting column 3-32 as a matrix as we need to modify the patient ID and diagnosis.
+```{r}
+wisc.data <- as.matrix(wisc.df[,3:32])
+```
+
+Now we are going to add the patient ID to the row names
+```{r}
+row.names(wisc.data) <- wisc.df$id
+```
+
+We are also going to re-code the diganosis code to 1 (Benign) and 2 (Malignant)
+```{r}
+wisc.diagnosis <- as.numeric(wisc.df$diagnosis=="B")
+table(wisc.diagnosis)
+```
+
+Examining the column names. We want to know how many features of the columns has _mean
+```{r}
+wisc.colname <- colnames(wisc.data)
+wisc.colname
+# Use to pattern match "_mean"
+ind.mean <- grep("_mean",wisc.colname)
+
+# We will now get the column names with the mean
+
+colnames(wisc.data)[ind.mean]
+
+
+```
+
+## Performing the Principal Component Analysis
+
+In order to proceed with PCA we need to check if the data need to be scaled when the analysis is done. To check we will perform a column mean and standard deviation analysis.
+
+```{r}
+# We are calculating the column means and rounding it to 2 decimal place
+round(colMeans(wisc.data),2)
+
+# Calculating the standard deviation with the apply command to perform calculation over all the columns.
+
+round(apply(wisc.data, 2, sd),2)
+
+# We will perform the PCA with scaling because mean and standard deviation are quite variable between columns
+```
+
+Performing the PCA!
+```{r}
+wisc.pr <- prcomp(wisc.data, scale = TRUE)
+
+summary(wisc.pr)
+```
+
+PC1 captured **44.27%** of the variance and we need at least the first **3 PCs** to cpature at least 70% of the original variance. We need at least **7 PCs** to capture at least 90% of the original variance
+
+## Interpreting PCA Results
+
+We will do some visualization of the PCA results. First we will use biplot
+
+```{r}
+biplot(wisc.pr)
+```
+
+Nothing really stands out from the biplot because of the number of observations. They are all clumped in the center. Biplot might not be very useful in this situation, instead we will create a more standard scatter plot.
+
+```{r}
+# Creating the scalter plot of PC1 and PC2 and coloring the points based on the diagnosis
+
+plot(wisc.pr$x[,1], wisc.pr$x[,2], col = wisc.diagnosis+1, xlab= "PC1", ylab = "PC2")
+```
+
+Now we will plot the the PC1 and PC3
+```{r}
+plot(wisc.pr$x[,1], wisc.pr$x[,3], col = wisc.diagnosis+1, xlab= "PC1", ylab = "PC3")
+```
+
+## Visualizing Variance
+
+We will create a scree plot but first we need to calculate the variance
+
+```{r}
+wisc.pr.var <- wisc.pr$sdev^2
+# head(wisc.pr.var) will examine the variance that we just calculated
+```
+
+```{r}
+wisc.pve <- round(wisc.pr.var/sum(wisc.pr.var), 4)
+
+# Line plot of variance 
+plot(wisc.pve, xlab= "Principal Components", ylab= "Proportion of Variance Explained", ylim = c(0,1), type ="o")
+
+# Barplot of variance, naming each axis tick with PC number
+barplot(wisc.pve, ylab= "Percent of Variance Explained", names.arg = paste0("PC", 1:length(wisc.pve)) , las=2, axes=F)
+
+# This will create a y axis label based on the percent variance 
+axis(2, at=wisc.pve, labels = round(wisc.pve,2)*100)
+
+
+```
+
+We can also create a cumulative sum plot
+
+```{r}
+plot(cumsum(wisc.pve), xlab="Principal Component", ylab="Cumulative Proportion of Variance Explained", ylim=c(0,1), type="o")
+```
+
+We will now create the regular line plot and cumulative sum plot side by side
+```{r}
+par(mfrow= c(1,2), mar= c(5,4,4,2))
+
+plot(wisc.pve, xlab= "Principal Components", ylab= "Proportion of Variance Explained", ylim = c(0,1), type ="o")
+
+plot(cumsum(wisc.pve), xlab="Principal Component", ylab="Cumulative Proportion of Variance Explained", ylim=c(0,1), type="o")
+
+```
+
+We can also plot some ggplot based graph that are prettier
+```{r}
+# Installing the facoextra package
+# install.packages("factoextra")
+
+# Loading the factoextra package for use
+library(factoextra)
+
+
+fviz_eig(wisc.pr, addlabels= T, ncp = length(wisc.pve))
+```
+
+
+## Combining Methods of PCA Clustering
+
+We are going to perform hierachical clustering based on the PCA results. We need at least PCs that will describe 90% of the original variance. In this case PC1-7 will do that.
+
+First we will just do the clustering based on the first 2 PCs
+
+```{r}
+dist_wisc <- dist(wisc.pr$x[,1:2])
+
+wisc.pr.hclust <-hclust(dist_wisc, method = "ward.D2")
+
+plot (wisc.pr.hclust)
+```
+
+Now that we have the hierachical clustering done, we will now trim the dendrogram to 2 groups. 
+```{r}
+wisc.grp2 <- cutree(wisc.pr.hclust, k=2)
+table(wisc.grp2)
+```
+
+Now we will compare the original diganosis to the grouping by hierachical clustering
+```{r}
+table(wisc.grp2, wisc.diagnosis+1)
+```
+
+We will now plot the hierachical clustering grouping on to the scatter plot and color it. We will also compare the h-clustering and/or diagnosis
+```{r}
+par(mfrow= c(1,2))
+plot(wisc.pr$x[,1:2],col=wisc.grp2, main="H-Clustering")
+
+plot(wisc.pr$x[,1:2], col=wisc.diagnosis+1, main="Diagnosis")
+```
+
+
+We can also plot the PC plot in 3D with rgl
+```{r}
+# install.packages("rgl")
+
+# library("rgl")
+
+# We need to install Xquartz to do this...we will do this later
+```
+
+Now we will do the clusterin based on the first 7 PCs instead of 2.
+
+We will plot the dendrogram based on the clustering of first 7 PCs
+```{r}
+dist_wisc7 <- dist(wisc.pr$x[,1:7])
+
+wisc.pr.hclust7 <-hclust(dist_wisc7, method = "ward.D2")
+
+plot (wisc.pr.hclust7)
+```
+
+Now we will cut that dendrogram to 2 groups
+```{r}
+wisc7.grp2 <- cutree(wisc.pr.hclust7, k=2)
+table(wisc7.grp2)
+```
+
+Now we will plot the clustering based on 7 Pcs
+```{r}
+par(mfrow= c(1,2))
+plot(wisc.pr$x[,1:2],col=wisc7.grp2, main="H-Clustering of 7 PCs")
+
+plot(wisc.pr$x[,1:2], col=wisc.diagnosis+1, main="Diagnosis")
+```
+
+
+We should compare the sensitivity and specificity of this clustering based on the 7 PCs
+```{r}
+table(wisc7.grp2, wisc.diagnosis+1)
+```
+
+## Prediction
+
+We will use the predict function to use our PCA to analyze new cancer cell data
+
+```{r}
+new.cancer <- read.csv("https://tinyurl.com/new-samples-CSV")
+
+npc <- predict(wisc.pr, newdata=new.cancer)
+
+npc
+```
+
+We will now plot the new cancer cell data on to the original PCA plot.
+
+```{r}
+plot(wisc.pr$x[,1:2], col=wisc.diagnosis+1)
+points(npc[,1],npc[,2], col="blue", pch=15, cex=1.5)
+```
+
