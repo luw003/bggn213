@@ -1,0 +1,182 @@
+---
+title: "Class 6 Writing Functions in R"
+author: "Luke Wang"
+date: "1/25/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## File Reading!
+
+Using **data.table()** and related functions to bring data in to R properly.
+
+Insert a code chunk.
+You can bring small files into R directly through an URL
+```{r}
+read.table("https://bioboot.github.io/bggn213_S18/class-material/test1.txt", header= TRUE, sep=",")
+```
+
+Assign URL to file1
+```{r}
+file1 <- "https://bioboot.github.io/bggn213_S18/class-material/test1.txt"
+data1 <- read.csv(file1)
+data1
+```
+
+Reading table with custom seperator ($)
+```{r}
+file2 <- "https://bioboot.github.io/bggn213_S18/class-material/test2.txt"
+data2 <- read.table(file2, header =TRUE, sep="$")
+data2
+```
+
+If you get a weird data format, try read.table
+
+```{r}
+file3 <- "https://bioboot.github.io/bggn213_S18/class-material/test3.txt"
+data3 <- read.table(file3)
+data3
+```
+
+# Writing Function
+
+Writing a function
+If in the argument, a variable has a =, then it means it has a default value
+
+## Basic Addition Function
+```{r}
+add <- function(x, y=1) {
+# Sum the input x and y 
+  x+y
+}
+```
+
+Let's use the **add()** function
+```{r}
+add(1)
+```
+
+```{r}
+add(1,5)
+```
+
+```{r}
+add(c(1,2,3,4))
+```
+
+```{r}
+add(c(1,2,3,4),c(1,2,3,4))
+```
+What happens with the unexpected?
+```{r}
+# add(1,2,3)
+
+# Unused argument
+```
+
+```{r}
+# add(x=1,y="b")
+# Non numeric argument to binary operator
+```
+
+## Writing More Complex Function
+
+### Rules of Writing a Function
+Simplify & Reduce Calculation Duplication
+
+### Rescale Function
+You need a *name*, *arguments*, and *body*
+```{r}
+rescale <- function(x) {
+  rng <- range(x)
+  (x - rng[1]) / (rng[2] - rng[1])
+}
+```
+
+Testing with Small Vector
+```{r}
+rescale(1:10)
+```
+
+### Exceptions in Functions
+
+```{r}
+rescale (c(1,2,NA,3,10))
+```
+
+Diagnosing Unexpected Result
+```{r}
+z <- c(1,2,NA,3,10)
+range(x)
+```
+
+Dealing with NA
+```{r}
+# Range() has a arugment for na.rm
+rescale2 <- function(x) {
+  rng <- range(x, na.rm=TRUE)
+  (x - rng[1]) / (rng[2] - rng[1])
+}
+```
+
+```{r}
+rescale2 (c(1,2,NA,3,10))
+```
+
+Some more complex function
+```{r}
+rescale3 <- function(x, na.rm=TRUE, plot=FALSE) {
+   if(na.rm) {
+     rng <-range(x, na.rm=na.rm)
+   } else {
+     rng <-range(x)
+   }
+   print("Hello")
+   answer <- (x - rng[1]) / (rng[2] - rng[1])
+   return(answer)
+   print("is it me you are looking for?")
+   if(plot) {
+      plot(answer, typ="b", lwd=4)
+     print("Please don't ever sing again")
+}
+   print("I can see it in ...")
+   
+   # return() will end the function and return whatever variable in the return
+}
+```
+
+```{r}
+rescale3(1:10, plot=T)
+```
+
+## Anallysis of Protein Drug Interaction with Bio3D
+
+### Using Bio3D
+```{r}
+# Load bio3D
+library(bio3d)
+s1 <- read.pdb("4AKE")  # kinase with drug
+s2 <- read.pdb("1AKE")  # kinase no drug
+s3 <- read.pdb("1E4Y")  # kinase with drug
+s1.chainA <- trim.pdb(s1, chain="A", elety="CA")
+s2.chainA <- trim.pdb(s2, chain="A", elety="CA")
+s3.chainA <- trim.pdb(s3, chain="A", elety="CA")
+s1.b <- s1.chainA$atom$b
+s2.b <- s2.chainA$atom$b
+s3.b <- s3.chainA$atom$b
+plotb3(s1.b, sse=s1.chainA, typ="l", ylab="Bfactor")
+plotb3(s2.b, sse=s2.chainA, typ="l", ylab="Bfactor")
+plotb3(s3.b, sse=s3.chainA, typ="l", ylab="Bfactor")
+hc <- hclust( dist( rbind(s1.b, s2.b, s3.b) ) )
+plot(hc)
+```
+Examing what **read.pdb** does
+```{r}
+library(bio3d)
+pdb <- read.pdb("1hbs")
+pdb
+```
+
