@@ -1,0 +1,79 @@
+---
+title: "Class 13 Genomic Informatio and High Throughput Sequencing"
+author: "Luke Wang"
+date: "2/22/2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Identify genetic variants of interest
+
+We have found the 1000 genome project data for the SNP rs8067378 in ENSEMBLE and we are going to analyze the data to see how many of the people with Mexican ancestry in Los Angeles has the specific variant.
+
+```{r}
+mxl <- read.csv("373531-SampleGenotypes-Homo_sapiens_Variation_Sample_rs8067378.csv")
+geno <- table(mxl$Genotype..forward.strand.) # Get the number of variants for each genotype variant from the csv file
+round(geno/nrow(mxl)*100,1) # getting the percetnage for each variant
+```
+
+## Initial RNA Analysis
+
+```{r}
+library(seqinr)
+library(gtools)
+
+chars <- s2c("DDDDCDEDCDDDDBBDDDCC@") # This take a single string and breaks it in to individual characters
+chars
+phred <- asc(chars)-33 # This converts the ASCII characters from s2c function to numerical value
+phred
+prob <- 10**(-phred/10) # This calculates the probability for the base call
+prob
+```
+
+## Population Scale Analysis
+
+We will analyze the ~230 patient samples and whether there is any assosication of the 4 asthma-assosicated SNPs on ORMDL3 expression.
+
+```{r}
+patient <- read.table("rs8067378_ENSG00000172057.6.txt")
+
+table(patient$geno)
+
+summary(patient)
+
+inds.gg <- patient$geno=="G/G"
+ggexp <- patient$exp[inds.gg]
+summary(ggexp)
+
+
+```
+```{r}
+inds.aa <- patient$geno=="A/A"
+aaexp <- patient$exp[inds.aa]
+summary(aaexp)
+```
+
+```{r}
+inds.ag <- patient$geno=="A/G"
+agexp <- patient$exp[inds.ag]
+summary(agexp)
+```
+
+Now we will create a boxplot based on the genotype column using the formula argument in boxplot()
+```{r}
+boxplot(exp ~geno, data = patient, notch = T)
+```
+
+Creating a fancier plot in ggplot2
+
+```{r}
+library(ggplot2)
+# Boxplot with the data shown
+ggplot(patient, aes(geno, exp, fill=geno)) + 
+  geom_boxplot(notch=TRUE, outlier.shape = NA) + 
+  geom_jitter(shape=16, position=position_jitter(0.2), alpha=0.4)
+```
+
