@@ -1,0 +1,21 @@
+---
+title: "Find A Gene"
+author: "Luke Wang"
+date: "2/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Import Multiple Sequence Alignment
+```{r}
+mul.align <- read.fasta("muscle-I20190226-214140-0263-29316232-p1m.fst")
+```
+
+```{r}
+consensus <- consensus(mul.align)
+pdb <- blast.pdb(consensus$seq)
+```
+

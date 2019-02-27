@@ -1,0 +1,238 @@
+---
+title: "Class 14 Transcriptomics and the analysis of RNA-Seq data"
+author: "Luke Wang"
+date: "2/27/2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# RNA-Seq Analysis
+
+## Import countData and colData
+
+countData contains the information for each gene while colData contain metadata for metadata information.
+
+```{r}
+counts <- read.csv("data/airway_scaledcounts.csv", stringsAsFactors = FALSE)
+# stringsAsFactors = FALSE prevents the gene names from being convoerted to factors
+metadata <- read.csv("data/airway_metadata.csv", stringsAsFactors = FALSE)
+```
+
+Now let's examine the data structure of these files. It's very important the column of ID in colData must match the countData row names.
+
+```{r}
+head(counts)
+head(metadata)
+```
+
+How many genes are there in the the counts file
+```{r}
+nrow(counts)
+```
+
+How many experimental conditions are there
+```{r}
+ncol(counts)
+```
+
+Now let's check that the column names of the counts file match the row names of the metadata
+
+```{r}
+all(metadata$id == colnames(counts)[-1]) # the -1 will get everything except the first one of the index
+# all() will sumarize if all values are true
+```
+
+
+## Differential gene experssion  by visual 
+
+This is solely for demonstration purpose. Don't ever do this for actual differential expression analysis
+
+```{r}
+View(metadata)
+```
+
+We want to compare the treated vs. control and overall mean of each gene across the 4 different cell types
+
+We want to first get the count data for control
+```{r}
+control.ids <- metadata$id[metadata[,"dex"]=="control"]
+control <- counts[,control.ids]
+rownames(control) <- counts$ensgene
+head(control)
+# this got rid of the gene names but we will get it back now
+
+```
+
+
+Now we will do it for the treated
+```{r}
+treated.ids <- metadata$id[metadata[,"dex"]=="treated"]
+treated <- counts[,treated.ids]
+rownames(treated) <- counts$ensgene
+head(treated)
+# this got rid of the gene names but we will get it back now
+```
+
+We will now calculate the means of each gene between the control and treated
+```{r}
+control.means <- rowMeans(control)
+head(control.means)
+treated.means <- rowMeans(treated)
+head(treated.means)
+```
+
+Now that we are going to combine the control means and treated means together in to a single data frame.
+
+```{r}
+meancounts <- data.frame(control.means,treated.means)
+head(meancounts)
+colSums(meancounts)
+```
+
+We want to visualize the mean counts of each gene between the control and treated cell lines
+```{r}
+plot(meancounts, col=c("red","blue"))
+```
+
+The plot sees a lot of points condensed in the corner, we think changin the scale to log scale 
+
+```{r}
+plot(meancounts, col=c("red","blue"),log="xy")
+```
+
+Now that we see the spread of the means we want to see how the fold change between control and treated. We use log2 becasue the math is easier.
+```{r}
+meancounts$log2fc <- log2(meancounts$treated.means/meancounts$control.means)
+head(meancounts)
+```
+
+The negative value means they are below the 45˚ line if we look at the graph. It means when the cell is treated, the gene has a lower value than in control. -Inf means it's trying to log O. We want to filter all the 0 values.
+
+```{r}
+zero <- which(meancounts[,1:2]==0, arr.ind=T)
+# arr.ind will give the array indicies instead of a messier output
+zero.unique <- unique(zero[,1]) 
+# we are only caring about the row section of the unique variable because the zero could either be in col 1 or 2
+meancounts.correct <- meancounts[-zero.unique,]
+head(meancounts.correct)
+```
+
+Now that we have cleaned up the data let's set up some threshold to help us furthur characterize the darta. It's common to set the threshold of greater than 2 or less than -2.
+
+```{r}
+up.ind <- meancounts.correct$log2fc >2
+down.ind <- meancounts.correct$log2fc <(-2)
+paste0("Up:",sum(up.ind))
+paste0("Down:",sum(down.ind))
+```
+
+## Adding Annotation Data
+
+There are couple ways to annotate the gene names, the first method is merging the annotation table that contains all the ENSEMBL gene id with corresponding name to the gene.
+
+```{r}
+anno <- read.csv("data/annotables_grch38.csv")
+head(anno)
+```
+
+We will use the merge() function that merges data together depending on common column frame.
+
+```{r}
+counts.anno <- merge(x= meancounts.correct,y= anno, by.x="row.names",by.y="ensgene")
+head(counts.anno)
+```
+
+An alternative way is to use some Bioconductor annotation packages to help with the annotation.
+```{r}
+# Bioconductor annotation packages
+library("AnnotationDbi")
+library("org.Hs.eg.db")
+```
+```{r}
+# Adding the gene symbols
+meancounts.correct$symbol <- mapIds(org.Hs.eg.db,
+                                    keys=row.names(meancounts.correct),
+                                    column="SYMBOL",
+                                    keytype="ENSEMBL",
+                                    multiVals="first")
+
+# Adding the entrezID
+meancounts.correct$entrez <- mapIds(org.Hs.eg.db,
+                                    keys=row.names(meancounts.correct),
+                                    column="ENTREZID",
+                                    keytype="ENSEMBL",
+                                    multiVals="first")
+# Adding the uniprot ID
+meancounts.correct$uniprot <- mapIds(org.Hs.eg.db,
+                                    keys=row.names(meancounts.correct),
+                                    column="UNIPROT",
+                                    keytype="ENSEMBL",
+                                    multiVals="first")
+head(meancounts.correct)
+```
+
+## DESeq2 Analysis
+Now we will do the analysis appropriately with DESeq2 library
+
+```{r}
+library(DESeq2)
+```
+
+DESeq2 uses a special object called DESeqDataSet which is composed from the count data, the metadata and the experimental design. It will also store the data in the object.
+
+```{r}
+dds <- DESeqDataSetFromMatrix(countData = counts,
+                              colData = metadata,
+                              design= ~dex,
+                              tidy= T)
+dds
+```
+
+Run the DESeq Analysis
+```{r}
+dds <- DESeq(dds)
+```
+
+Getting the results from DESeq Analysis
+```{r}
+res <- results(dds)
+res
+summary(res)
+```
+
+
+We can change the p value to 0.05
+```{r}
+summary(res, alpha=0.05)
+```
+
+## Visualizing Data with Volcano Plots
+
+Volcano plots is a common figure to use. X axis shows the fold change and the y axis is a log p value. The higher the value on the y, the more significant they are.
+
+```{r}
+plot(res$log2FoldChange, -log(res$padj))
+
+```
+
+Now let's colorize the graph
+```{r}
+
+mycols <- rep("gray",nrow(res))
+mycols[abs(res$log2FoldChange)>2] = "red"
+subsuet.inds <- res$padj<0.01 & abs(res$log2FoldChange)>2
+mycols[subsuet.inds] = "blue"
+plot(res$log2FoldChange, -log(res$padj), col=mycols)
+```
+
+We can also plot this in ggplot
+```{r}
+library(ggplot2)
+ggplot(as.data.frame(res), aes(log2FoldChange, -log10(pvalue), col=mycols)) + 
+    geom_point() + 
+    ggtitle("Volcano plot")
+```
+
