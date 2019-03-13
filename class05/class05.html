@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title>Section 2A Line Plot</title>
+
+<script type="text/javascript">
+window.onload = function() {
+  var imgs = document.getElementsByTagName('img'), i, img;
+  for (i = 0; i < imgs.length; i++) {
+    img = imgs[i];
+    // center an image if it is the only element of its parent
+    if (img.parentElement.childElementCount === 1)
+      img.parentElement.style.textAlign = 'center';
+  }
+};
+</script>
+
+
+
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 13px;
+}
+
+body {
+  max-width: 800px;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 {
+   font-size:2.2em;
+}
+
+h2 {
+   font-size:1.8em;
+}
+
+h3 {
+   font-size:1.4em;
+}
+
+h4 {
+   font-size:1.0em;
+}
+
+h5 {
+   font-size:0.9em;
+}
+
+h6 {
+   font-size:0.8em;
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre, img {
+  max-width: 100%;
+}
+pre {
+  overflow-x: auto;
+}
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code {
+  font-size: 92%;
+  border: 1px solid #ccc;
+}
+
+code[class] {
+  background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * {
+      background: transparent !important;
+      color: black !important;
+      filter:none !important;
+      -ms-filter: none !important;
+   }
+
+   body {
+      font-size:12pt;
+      max-width:100%;
+   }
+
+   a, a:visited {
+      text-decoration: underline;
+   }
+
+   hr {
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote {
+      padding-right: 1em;
+      page-break-inside: avoid;
+   }
+
+   tr, img {
+      page-break-inside: avoid;
+   }
+
+   img {
+      max-width: 100% !important;
+   }
+
+   @page :left {
+      margin: 15mm 20mm 15mm 10mm;
+   }
+
+   @page :right {
+      margin: 15mm 10mm 15mm 20mm;
+   }
+
+   p, h2, h3 {
+      orphans: 3; widows: 3;
+   }
+
+   h2, h3 {
+      page-break-after: avoid;
+   }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<p>#&#39; &mdash;
+#&#39; title: &ldquo;CLass 5 Graphing and Plotting in R&rdquo;
+#&#39; author: &ldquo;Luke Wang&rdquo;
+#&#39; date: &ldquo;Fri Jan 25 13:32:34 2019&rdquo;
+#&#39; output: github_document
+#&#39; &mdash;</p>
+
+<p>#&#39; Class 05 Graphics and plots with R</p>
+
+<h1>Section 2A Line Plot</h1>
+
+<h1>Read table with header</h1>
+
+<p>weight &lt;- read.table(&ldquo;lecture-5-bggn213-rstats/weight_chart.txt&rdquo;, header = TRUE)</p>
+
+<h2>Line plot weight table</h2>
+
+<h1>type = change the type of plots plotted</h1>
+
+<h1>pch = change shape of points (integer value), you can use 1:15 to cycle through different</h1>
+
+<h1>col = color of the point, pass it through vector to alternate color  c(&ldquo;&rdquo;,&ldquo;&rdquo;&hellip;)</h1>
+
+<h1>cex = how much text and symbols should be magnified</h1>
+
+<h1>lwd = line width</h1>
+
+<h1>ylim = limits for hte y axis, use vector to bound it</h1>
+
+<h1>xlab/ylab = name of x/y lable, in &ldquo;&rdquo;</h1>
+
+<p>plot( weight,pch=15,type =&ldquo;o&rdquo;, cex= 1.5, lwd=2, ylim=c(2,10), xlab=&ldquo;Age (months) &rdquo;, ylab=&ldquo;Weight (kg)&rdquo;, main = &ldquo;Baby Weight for First 9 Months&rdquo;)</p>
+
+<h2>Barplot of genomic features</h2>
+
+<h1>Read features data</h1>
+
+<h1>sep = \t (tab)</h1>
+
+<p>features &lt;- read.table(&ldquo;lecture-5-bggn213-rstats/feature_counts.txt&rdquo;, header= TRUE, sep = &ldquo;\t&rdquo;)</p>
+
+<h1>Barplot</h1>
+
+<h1>must be vector, so specify the column with numerical values</h1>
+
+<h1>horiz = TRUE will set the bar plot to horizontal</h1>
+
+<h1>names.org = will set names of the y axis</h1>
+
+<h1>las, a setting in par, 1= alway horizonal, 3= always vertical</h1>
+
+<h1>par(mar=c()) = c(bottom, left, top, right), should be set prior to the graphic being drawn</h1>
+
+<h1>to resotre par, one would set the original par value to a vector then restor par value with the old par vector</h1>
+
+<h1>par()$mar will display the default margin</h1>
+
+<p>par(mar=c(5.1, 7, 4.1, 2.1))
+barplot(features$Count, horiz = TRUE, xlab = &ldquo;Counts&rdquo;, names.arg = features$Feature, las = 1, main =&ldquo;Number of Features in the Mouse GRCm38 Genome&rdquo;, xlim = c(0,80000))</p>
+
+<h2>Using colors in plots</h2>
+
+<h1>rainbow()</h1>
+
+<h1>heat.colors()</h1>
+
+<h1>cm.colors()</h1>
+
+<h1>topo.colors</h1>
+
+<h1>terrain.colors</h1>
+
+<p>sex_counts &lt;- read.table(&ldquo;lecture-5-bggn213-rstats/male_female_counts.txt&rdquo;, header = TRUE, sep = &ldquo;\t&rdquo;)</p>
+
+<h1>color with rainbow()</h1>
+
+<p>barplot(sex_counts$Count, col = rainbow(nrow(sex_counts)))</p>
+
+<h1>color with alternating color</h1>
+
+<p>barplot(sex_counts$Count, col = c(&ldquo;yellow&rdquo;,&ldquo;blue&rdquo;))</p>
+
+<h2>Coloring by value</h2>
+
+<p>genes &lt;- read.table(&ldquo;lecture-5-bggn213-rstats/up_down_expression.txt&rdquo;, header = TRUE)</p>
+
+<p>state &lt;- genes$State </p>
+
+<h1>Plot condition 1 vs. condition 2 on dot plot</h1>
+
+<h1>Set 3 colors using palette() to assign colors</h1>
+
+<p>palette(c(&ldquo;blue&rdquo;,&ldquo;grey&rdquo;, &ldquo;red&rdquo;))
+plot(genes$Condition1,genes$Condition2, col= state, ylab = &ldquo;Expression Condition 2&rdquo;, xlab=&ldquo;Expression Condition 1&rdquo;)</p>
+
+<h2>Dynamic use of color, coloring by Point Density</h2>
+
+<p>meth &lt;- read.delim(&ldquo;lecture-5-bggn213-rstats/expression_methylation.txt&rdquo;)</p>
+
+<h1>densCols creates a vector of color values assigned to each point</h1>
+
+<p>densColors &lt;- densCols(meth$gene.meth, meth$expression)
+plot(meth$gene.meth,meth$expression, col= densColors, pch=20)</p>
+
+<h1>Plot genes with greater than zero expression</h1>
+
+<h1>Using colorspaces to assign diverging HCL palette with n=3 to the plot</h1>
+
+<h1>Load library(colorspace)</h1>
+
+<p>library(colorspace)
+expressionind &lt;- meth$expression &gt; 0
+densColors &lt;- densCols(meth$gene.meth[expressionind], meth$expression[expressionind], colramp = colorRampPalette(diverge_hcl(3)))
+plot(meth$gene.meth[expressionind],meth$expression[expressionind], col= densColors, pch=20)</p>
+
+</body>
+
+</html>
