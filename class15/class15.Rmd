@@ -1,0 +1,173 @@
+---
+title: "Class 15 Pathway Analysis and Gene Onotology"
+author: "Luke Wang"
+date: "3/4/2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We will perfrom more differential expression analysis on a previously published dataset, but this time we will explore furthur and begin to annotate the genes that are differentially expressed.
+
+
+## Differential Expression Analysis
+
+We first need to perform differential expression analysis on the data set we have before moving forward with more analysis.
+
+```{r}
+# loading the DESeq2 library for analysis
+library(DESeq2)
+```
+
+Now we will load our data files
+```{r}
+count <- "data/GSE37704_featurecounts.csv"
+meta <- "data/GSE37704_metadata.csv"
+
+colData <- read.csv(meta, row.names= 1)
+head(colData)
+countData <- read.csv(count, row.names = 1)
+head(countData)
+```
+
+Now we need to do some cleaning up of the data that we just imported because there is an odd length column in the counts data table.
+
+```{r}
+countData <- as.matrix(countData[,-1])
+head(countData)
+```
+
+We also want to remove any genes that have zero count across all the samples.
+```{r}
+zero <- rowSums(countData)!=0
+head(zero)
+countData <- countData[zero,]
+head(countData)
+```
+
+Our data has been cleaned up and now it's time for the DESeq analysis
+```{r}
+dds <- DESeqDataSetFromMatrix(
+  countData = countData,
+  colData = colData,
+  design = ~condition
+)
+
+dds= DESeq(dds)
+
+res <- results(dds, contrast=c("condition","hoxa1_kd", "control_sirna"))
+summary(res)
+```
+
+We will plot the results on a volcano plot to visualize the fold change.
+
+```{r}
+mycols <- rep("gray",nrow(res)) # this will make all the genes gray
+mycols [abs(res$log2FoldChange)>2] <- "red" # this will make any genes that has absolute value change of 2 in log2 fold change to be red
+inds <- (res$padj<0.01) & (abs(res$log2FoldChange)>2)
+mycols[inds] <- "blue"
+plot(res$log2FoldChange,-log(res$padj), col=mycols, xlab="Log2(FoldChange", ylab="-Log(P-Value")
+
+
+
+```
+
+Now we will add gene annotation to the differential expression analysis data
+
+```{r}
+library(AnnotationDbi)
+library("org.Hs.eg.db")
+
+columns(org.Hs.eg.db)
+
+res$symbol = mapIds(org.Hs.eg.db,
+                    keys=row.names(res), 
+                    keytype="ENSEMBL",
+                    column="SYMBOL",
+                    multiVals="first")
+
+res$entrez = mapIds(org.Hs.eg.db,
+                    keys=row.names(res),
+                    keytype="ENSEMBL",
+                    column="ENTREZID",
+                    multiVals="first")
+
+res$name =   mapIds(org.Hs.eg.db,
+                    keys=row.names(res),
+                    keytype="ENSEMBL",
+                    column="GENENAME",
+                    multiVals="first")
+
+head(res, 10)
+```
+
+```{r}
+res <- res[order(res$pvalue),]
+write.csv(res, file="deseq_results.csv")
+```
+
+
+## Pathway Analysis
+
+```{r}
+library(pathview)
+library(gage)
+library(gageData)
+data("kegg.sets.hs")
+data("sigmet.idx.hs")
+kegg.sets.hs = kegg.sets.hs[sigmet.idx.hs] # we want to focus on teh metabolic and signaling pathways only
+head(kegg.sets.hs)
+```
+
+The gage() function require a named vector of fold changes where the names of the values are the Entrez gene IDs. We can extract this information from the annotated Results.
+
+```{r}
+foldchanges <- res$log2FoldChange
+names(foldchanges) <- res$entrez
+head(foldchanges)
+```
+
+We will run the gage pathway analysis
+```{r}
+keggres <- gage(foldchanges, gsets=kegg.sets.hs)
+attributes(keggres)
+head(keggres$less)
+```
+Now we can visualize the pathway analysis data with pathview().
+```{r}
+pathview(gene.data=foldchanges, pathway.id = "hsa04110")
+pathview(gene.data = foldchanges, pathway.id = "hsa04110", kegg.native = FALSE)
+```
+
+Now let's automate this process and focus on the top 5 upregulated pathways.
+```{r}
+keggrespathways <- rownames(keggres$greater)[1:5]
+keggrespathways
+keggresids <- substr(keggrespathways, start=1,stop=8) # this is a cheat way to extract the kegg ids from the strong that was generated
+keggresids
+
+pathview(gene.data=foldchanges, pathway.id = keggresids, species = "hsa")
+```
+
+## Gene Ontology
+
+```{r}
+data("go.sets.hs")
+data("go.subs.hs")
+
+gobpset <- go.sets.hs[go.subs.hs$BP] # this restricts the GO to be on biological process
+
+gobpres <- gage(foldchanges,gsets=gobpset, same.dir=T)
+gobpres$greater
+```
+
+## Reactome Analysis
+```{r}
+sig_genes <- res[res$padj <= 0.05 & !is.na(res$padj), "symbol"]
+print(paste("Total number of significant genes:", length(sig_genes)))
+
+write.table(sig_genes, file="significant_genes.txt", row.names=FALSE, col.names=FALSE, quote=FALSE)
+```
+
