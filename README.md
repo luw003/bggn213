@@ -15,4 +15,4 @@ This is a compilation of work gennerated from the [Introduction to Bioinformatic
 - Class 12 [Bioinformatics of Drug Design](https://github.com/luw003/bggn213/blob/master/class12/class12.md)
 - Class 13 [Genome Informatics and High Throughput Sequencing](https://github.com/luw003/bggn213/blob/master/class13/class13.md)
 - Class 14 [Transcriptomics and RNASeq](https://github.com/luw003/bggn213/blob/master/class14/class14.md)
-- CLass 15 [Genome Annotation] (https://github.com/luw003/bggn213/blob/master/class15/class15.md)
+- CLass 15 [Genome Annotation](https://github.com/luw003/bggn213/blob/master/class15/class15.md)
