@@ -5,7 +5,7 @@ This is a compilation of work gennerated from the [Introduction to Bioinformatic
 
 
 ## Contents
-1. [Data Visualization in R](https://github.com/luw003/bggn213/blob/master/class05/class05.md)
+1. [Data Visualization in R](https://github.com/luw003/bggn213/blob/master/class05/class05.html)
 2. [Using and Writing R Functions](https://github.com/luw003/bggn213/blob/master/class06/class06.md)
 3. [Bioinformatics Packages from CRAN and Bioconductor](https://github.com/luw003/bggn213/blob/master/class07/class07.md)
 4. [Intro to Machine Learning in R](https://github.com/luw003/bggn213/blob/master/class08/class08.md)
